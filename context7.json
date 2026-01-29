@@ -1,0 +1,12 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "Veeam Plug-in for Nutanix AHV Docs",
+  "description": "Unofficial documentation dump for Veeam Plug-in for Nutanix AHV. Backup and recovery solution for Nutanix AHV virtual machines integrated with Veeam Backup & Replication.",
+  "folders": ["docs"],
+  "excludeFolders": [],
+  "excludeFiles": [],
+  "rules": [
+    "This is unofficial documentation - always verify against official Veeam Help Center",
+    "This plugin integrates with Veeam Backup & Replication for Nutanix AHV VM protection"
+  ]
+}

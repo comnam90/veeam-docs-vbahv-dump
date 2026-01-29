@@ -1,0 +1,89 @@
+name: Create Release on Merge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get release version
+        id: version
+        run: |
+          DATE=$(date +'%Y.%m.%d')
+
+          EXISTING=$(gh release list --limit 100 | grep -c "v${DATE}\." || true)
+          [ -z "$EXISTING" ] && EXISTING=0
+
+          VERSION=$((EXISTING + 1))
+
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v${DATE}.${VERSION}" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get PR body for the associated PR if it exists
+          # We need to find the PR associated with this commit
+          PR_NUMBER=$(gh pr list --state merged --search "${{ github.sha }}" --json number --jq '.[0].number')
+
+          if [ -n "$PR_NUMBER" ] && [ "$PR_NUMBER" != "null" ]; then
+            PR_BODY=$(gh pr view "$PR_NUMBER" --json body --jq .body)
+
+            # Extract counts from PR body table
+            # | Type | New | Updated (Content) | Updated (Metadata) | Deleted |
+            # | Markdown | $NEW_MD_COUNT | $CONTENT_COUNT | $METADATA_COUNT | ...
+
+            ADDED=$(echo "$PR_BODY" | grep "| Markdown |" | awk -F'|' '{print $3}' | tr -d ' ')
+            UPDATED_CONTENT=$(echo "$PR_BODY" | grep "| Markdown |" | awk -F'|' '{print $4}' | tr -d ' ')
+            UPDATED_METADATA=$(echo "$PR_BODY" | grep "| Markdown |" | awk -F'|' '{print $5}' | tr -d ' ')
+
+            # Sum up updates
+            UPDATED=$((UPDATED_CONTENT + UPDATED_METADATA))
+          else
+            # Fallback to git log if no PR found (e.g. direct push)
+            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -z "$LAST_TAG" ]; then
+              COMMITS=$(git log --oneline --no-merges)
+            else
+              COMMITS=$(git log ${LAST_TAG}..HEAD --oneline --no-merges)
+            fi
+
+            # Rough estimate based on file changes since we don't have individual commits per file anymore
+            ADDED=$(git diff --name-status ${LAST_TAG}..HEAD | grep "^A" | grep ".md$" | wc -l)
+            UPDATED=$(git diff --name-status ${LAST_TAG}..HEAD | grep "^M" | grep ".md$" | wc -l)
+          fi
+
+          [ -z "$ADDED" ] && ADDED=0
+          [ -z "$UPDATED" ] && UPDATED=0
+
+          echo "added=$ADDED" >> $GITHUB_OUTPUT
+          echo "updated=$UPDATED" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Documentation Update - ${{ steps.version.outputs.date }} (#${{ steps.version.outputs.version }})"
+          body: |
+            ## Changes
+            - **Added**: ${{ steps.changelog.outputs.added }} new pages
+            - **Updated**: ${{ steps.changelog.outputs.updated }} existing pages
+
+            ---
+            *Scraped from [Veeam Help Center](https://helpcenter.veeam.com)*
+          generate_release_notes: true
