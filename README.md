@@ -1,5 +1,17 @@
 # Veeam Plug-in for Nutanix AHV Documentation Dump
 
+> [!WARNING]
+> **DEPRECATED — Documentation Merged into VBR**
+>
+> The standalone documentation for Veeam Plug-in for Nutanix AHV has been
+> merged into the main **Veeam Backup & Replication** userguide. This repository is no
+> longer updated.
+>
+> - 📖 **Official VBR userguide**: [helpcenter.veeam.com/docs/backup/userguide](https://helpcenter.veeam.com/docs/backup/userguide/overview.html)
+> - 📦 **VBR documentation dump**: [comnam90/veeam-docs-vbr-dump](https://github.com/comnam90/veeam-docs-vbr-dump)
+
+---
+
 > **UNOFFICIAL DOCUMENTATION DUMP**
 >
 > This repository contains an automated conversion of Veeam Help Center
@@ -14,16 +26,15 @@ Markdown conversions of Veeam Plug-in for Nutanix AHV documentation, optimized f
 
 |                  |                                                      |
 | ---------------- | ---------------------------------------------------- |
-| **Source**       | https://helpcenter.veeam.com/docs/vbahv/userguide/   |
-| **Last Updated** | 2026-01-29                                           |
+| **Source**       | https://helpcenter.veeam.com/docs/vbahv/userguide   |
 | **Maintainer**   | [@comnam90](https://github.com/comnam90)             |
 
 ## Structure
 
 ```
 docs/
-├── *.md          # User Guide
-└── images/       # Screenshots (WebP images)
+  *.md - Documentation pages
+  *.webp - Images
 ```
 
 ## Usage with Context7
